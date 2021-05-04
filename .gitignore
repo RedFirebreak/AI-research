@@ -1,0 +1,6 @@
+# We dont want to upload our output
+output.csv
+
+# We dont want to upload our credentials file accidentally
+credentials.json
+*.json
