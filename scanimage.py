@@ -20,6 +20,7 @@ scanned = 0
 
 ## CONFIG  ##
 subFoldersToCheck = ["Default","Clarity","Contrast","Omgedraaid_cats","Spiegel","Temperature"] # <-- This checks in the subfolders, make sure they exist!
+#subFoldersToCheck = ["Default"] # <-- This checks in the subfolders, make sure they exist!
 successList     = ["Cat","Felidae","Small to medium-sized cats","Domestic short-haired cat"] # <-- This is what counts as a "correct" search from the API
 successScore    = 0.90 # <-- Minimal required score to count as correct (0 - 1)
 topAmount       = 5 # <-- Only check the top X given labels
@@ -28,7 +29,7 @@ def detect_labels(path):
     """Detects labels in the file."""
     from google.cloud import vision
     import io
-    print(f"SCANNING IMAGE: {path}")
+    print(f"-- Sending to google API for evaluation")
     client = vision.ImageAnnotatorClient()
 
     with io.open(path, 'rb') as image_file:
@@ -57,7 +58,7 @@ def detect_labels(path):
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
     else:
-        print("SCANNING DONE")
+        print("-- Tags recieved from google!")
         return returnlabels
 
 def top5cat(labels):
@@ -67,7 +68,7 @@ def top5cat(labels):
     global successScore
     global topAmount
     
-    ##print("EVALUATING IMAGE")
+    print("-- Evaluating tags")
     
     success = False
    
@@ -111,11 +112,14 @@ for foldername in subFoldersToCheck:
 
 
 ## Everything has been setup, give a clear start signal
-print(f"Starting! Images found:", len(allImages))
+print(f"Starting! Amount of images found:", len(allImages))
 for image in allImages:
+    print(f"Next image: {image}")
     ## Try to detect the image with the google API
-    #labeledImage = detect_labels(image)
-    labeledImage = [{'tag': 'Cat', 'score': 0.965}, {'tag': 'Felidae', 'score': 0.919}, {'tag': 'Carnivore', 'score': 0.907}, {'tag': 'Small to medium-sized cats', 'score': 0.885}, {'tag': 'Window', 'score': 0.851}, {'tag': 'Whiskers', 'score': 0.848}, {'tag': 'Iris', 'score': 0.846}, {'tag': 'Snout', 'score': 0.771}, {'tag': 'Fur', 'score': 0.684}, {'tag': 'Domestic short-haired cat', 'score': 0.681}]
+    labeledImage = detect_labels(image)
+
+    ## Debug string, use to skip the google api part and get a good list of tags for testing
+    # labeledImage = [{'tag': 'Cat', 'score': 0.965}, {'tag': 'Felidae', 'score': 0.919}, {'tag': 'Carnivore', 'score': 0.907}, {'tag': 'Small to medium-sized cats', 'score': 0.885}, {'tag': 'Window', 'score': 0.851}, {'tag': 'Whiskers', 'score': 0.848}, {'tag': 'Iris', 'score': 0.846}, {'tag': 'Snout', 'score': 0.771}, {'tag': 'Fur', 'score': 0.684}, {'tag': 'Domestic short-haired cat', 'score': 0.681}]
 
     ## Check if the given labels flag a success!
     success = top5cat(labeledImage)
@@ -150,9 +154,10 @@ for image in allImages:
     
     ## Done!
     scanned = scanned + 1
+    print(f"-- Data formatted and stored! Next!")
 
 ## When done, print the result
-print(f"DONE. Writing results to csv file")
+print(f"DONE. Writing results to .csv file")
 
 name = "output.csv"
 with open(name,'w', newline='') as outfile:
